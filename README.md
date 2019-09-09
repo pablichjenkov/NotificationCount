@@ -1,3 +1,6 @@
-Demo project for demonstrating Nougat's rate limiting of notification updates.
+Demo project to test Android's rate limits of Heads-Up notification updates.
+The rate may vary per device brand.
 
-You can read more about it on my blog: http://saket.me/?p=263.
+**Other Sources:**
+
+[Nougat Notification Rate Limits]( http://saket.me/?p=263)
