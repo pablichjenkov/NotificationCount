@@ -1,4 +1,4 @@
 <resources>
-  <string name="app_name">Notification Rate Limit</string>
+  <string name="app_name">Notification Test</string>
   <string name="accessibility_service_description">Heads-Up Notification Counter</string>
 </resources>

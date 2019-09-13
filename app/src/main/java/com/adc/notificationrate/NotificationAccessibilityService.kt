@@ -31,6 +31,8 @@ class NotificationAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(e: AccessibilityEvent) {
 
+        Logger.log("========== event: ${e.action}")
+
         if (e.eventType == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
 
             val now = SystemClock.elapsedRealtime()
