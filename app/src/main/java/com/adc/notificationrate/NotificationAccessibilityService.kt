@@ -3,17 +3,63 @@ package com.adc.notificationrate
 import android.view.accessibility.AccessibilityEvent
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.accessibilityservice.AccessibilityService
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.os.SystemClock
 
 
 class NotificationAccessibilityService : AccessibilityService() {
 
-    private val ONE_SECOND = 1000L
-
     private var notificationCounter = 0
 
     private var lastEventTimeStamp = 0L
 
+    private var isClientReceiverRegistered = false
+
+    private val clientRequestReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+
+            intent?.run {
+
+                if (INTENT_ACTION_NOTIFICATION_TEST_RESET.equals(action, true)) {
+
+                    notificationCounter = 0
+
+                }
+
+            }
+
+        }
+    }
+
+    companion object {
+
+        val INTENT_ACTION_NOTIFICATION_TEST_RESET = "com.adc.notificationrate.action.notification.test.reset"
+
+        val INTENT_ACTION_NOTIFICATION_COUNT_UPDATE = "com.adc.notificationrate.action.notification.test.count"
+
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+
+        IntentFilter()
+                .apply {
+
+                    addAction(INTENT_ACTION_NOTIFICATION_TEST_RESET)
+
+                }.also {
+
+                    registerReceiver(clientRequestReceiver, it)
+
+                    isClientReceiverRegistered = true
+
+                }
+
+    }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -27,11 +73,25 @@ class NotificationAccessibilityService : AccessibilityService() {
         info.packageNames = arrayOf("com.adc.notificationrate")
 
         serviceInfo = info
+
+        if (isEmulator()) {
+
+            PeriodicRunnable(
+                    BgScheduledExecutor.instance,// MainScheduledExecutor.instance,
+                    {
+                        increaseCounter()
+                        broadcastCounter()
+                    },
+                    3000
+            ).also { it.start() }
+
+        }
+
     }
 
     override fun onAccessibilityEvent(e: AccessibilityEvent) {
 
-        Logger.log("========== event: ${e.action}")
+        Logger.log("========== onAccessibilityEvent: ${e.action}")
 
         if (e.eventType == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
 
@@ -43,24 +103,58 @@ class NotificationAccessibilityService : AccessibilityService() {
 
             Logger.log("========== elapsedTime = $elapsedTime")
 
-            if (elapsedTime >= ONE_SECOND) {
+            notificationCounter ++
 
-                notificationCounter = 0
-
-            } else {
-                Logger.log("========== Notification Count = $notificationCounter")
-                // It means we are getting active events from the notification stream
-                notificationCounter ++
-
-            }
-
+            broadcastCounter()
 
         }
 
     }
 
     override fun onInterrupt() {
-        // TODO Auto-generated method stub
+        Logger.log("========== NotificationAccessibilityService::onInterrupt()")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        if (isClientReceiverRegistered) {
+            unregisterReceiver(clientRequestReceiver)
+        }
+
+    }
+
+    private fun increaseCounter() {
+
+        if (notificationCounter == 100) {
+            notificationCounter = 0
+        }
+
+        notificationCounter ++
+
+    }
+
+    private fun broadcastCounter() {
+
+        Intent().also { intent ->
+            intent.action = INTENT_ACTION_NOTIFICATION_COUNT_UPDATE
+            intent.putExtra("notificationCount", notificationCounter)
+            sendBroadcast(intent)
+        }
+
+    }
+
+    private fun isEmulator(): Boolean {
+
+        return Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.MANUFACTURER.contains("Genymotion")
+                || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+                || "google_sdk".equals(Build.PRODUCT);
+
     }
 
 }

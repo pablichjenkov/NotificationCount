@@ -1,4 +1,8 @@
 <resources>
   <string name="app_name">Notification Test</string>
   <string name="accessibility_service_description">Heads-Up Notification Counter</string>
+  <string name="accessibility_service_disabled_description">
+    The Accessibility Service that counts the actual notifications posted to the screen is disabled.
+    To turn it on go to Setting -> Accessibility -> Services and activate <b>Notification Test</b>.
+  </string>
 </resources>

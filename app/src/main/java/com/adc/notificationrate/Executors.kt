@@ -9,7 +9,6 @@ interface DelayExecutor {
     fun postNow(runnable: Runnable)
     fun postDelayed(runnable: Runnable, delayInMillis: Long)
     fun remove(runnable: Runnable?): Boolean
-    fun shutdown()
 }
 
 class BgScheduledExecutor private constructor(
@@ -32,10 +31,6 @@ class BgScheduledExecutor private constructor(
 
     override fun remove(runnable: Runnable?): Boolean {
         return super.remove(runnable)
-    }
-
-    override fun shutdown() {
-        super.shutdown()
     }
 
     companion object {
@@ -66,13 +61,16 @@ class MainScheduledExecutor private constructor(
 
     }
 
-    override fun shutdown() { handler.looper.quit() }
-
     override fun remove(runnable: Runnable?): Boolean {
 
-        handler.removeCallbacks(runnable)
+        runnable?.let {
 
-        return true
+            handler.removeCallbacks(it)
+
+            return@remove true
+        }
+
+        return false
 
     }
 

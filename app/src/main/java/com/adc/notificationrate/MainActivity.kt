@@ -1,34 +1,25 @@
 package com.adc.notificationrate
 
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.view.accessibility.AccessibilityManager
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.concurrent.atomic.AtomicBoolean
+import android.content.Intent
+import android.provider.Settings
 
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var accessibilityManager: AccessibilityManager
-
-    private lateinit var notificationManagerCompat: NotificationManagerCompat
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
 
         initNotificationCenter()
-
-        accessibilityManager = getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-
-        printEnabledAccessibilityServices()
 
         setupView()
 
@@ -43,7 +34,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initNotificationCenter() {
 
-        notificationManagerCompat = NotificationManagerCompat.from(this)
+        val notificationManagerCompat = NotificationManagerCompat.from(this)
 
         if (Build.VERSION.SDK_INT >= 26) {
 
@@ -73,23 +64,34 @@ class MainActivity : AppCompatActivity() {
 
         if (isTestRunning) {
 
-            startTestBtn.isEnabled = false
-
             with(BgApplication.instance.notificationPoster) {
 
-                batchCapInput.setText(batchCap.toString())
+                batchCapInput.setText(batchCap.toString(10))
 
                 intervalInput.setText(intervalMillis.toString(10))
 
-                repeatInput.setText(repeatMillis.toString(10))
+                repeatInput.setText(repeatMillis.div(1000).toInt().toString(10))
+
+                notificationPostedText.text = notificationPostedCount.toString(10)
 
                 notificationTestCallback = notificationTestCB
 
             }
 
+            startTestBtn.text = "Stop"
+
+            startTestBtn.setOnClickListener {
+
+                BgApplication
+                        .instance
+                        .notificationPoster
+                        .stopTest()
+
+            }
+
         } else {
 
-            startTestBtn.isEnabled = true
+            startTestBtn.text = "Start"
 
             startTestBtn.setOnClickListener {
 
@@ -98,6 +100,8 @@ class MainActivity : AppCompatActivity() {
                 val intervalMillis = intervalInput.text.toString().toLong()
 
                 val repeatMillis = repeatInput.text.toString().toInt().times(1000L)
+
+                notificationPostedText.text = "0"
 
                 BgApplication
                         .instance
@@ -115,11 +119,34 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    var notificationTestCB = object : NotificationTestCallback {
+    private var notificationTestCB = object : NotificationTestCallback {
+
+        override fun onServiceDisabled() {
+
+            AlertDialog.Builder(this@MainActivity)
+                    .setMessage(R.string.accessibility_service_disabled_description)
+                    .setPositiveButton(
+                            "Go",
+                            { dialog, _ ->
+
+                                dialog.dismiss()
+
+                                Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).also {
+
+                                    startActivity(it)
+
+                                }
+
+                            }
+                    )
+                    .create()
+                    .show()
+
+        }
 
         override fun onTestStart() {
 
-            startTestBtn.isEnabled = false
+            setupView()
 
         }
 
@@ -129,25 +156,15 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-        override fun onLastBurst() {
+        override fun onCounterUpdate(count: Int) {
 
-            startTestBtn.isEnabled = true
+            notificationPostedText.text = count.toString(10)
 
         }
 
-    }
+        override fun onTestStop() {
 
-    private fun printEnabledAccessibilityServices() {
-
-        val accessibilityServices =
-                accessibilityManager
-                        .getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
-
-        Logger.log("Accessibility Service List size: " + accessibilityServices.size)
-
-        for (info in accessibilityServices) {
-
-            Logger.log("Accessibility Service: " + info.id)
+            setupView()
 
         }
 

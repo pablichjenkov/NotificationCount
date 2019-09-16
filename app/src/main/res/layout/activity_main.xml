@@ -84,13 +84,33 @@
         app:layout_constraintBaseline_toBaselineOf="@+id/timeLeftLabel"
         android:text="0"/>
 
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/notificationPostedLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Notifications Count: "
+        app:layout_constraintTop_toBottomOf="@+id/timeLeftLabel"
+        app:layout_constraintLeft_toLeftOf="parent"/>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/notificationPostedText"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:gravity="center_horizontal"
+        app:layout_constraintTop_toBottomOf="@+id/timeLeftLabel"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBaseline_toBaselineOf="@+id/notificationPostedLabel"
+        android:text="0"/>
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/startTestBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="Start"
-        app:layout_constraintTop_toBottomOf="@+id/timeLeftLabel"
+        app:layout_constraintTop_toBottomOf="@+id/notificationPostedLabel"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"/>
 

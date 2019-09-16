@@ -1,6 +1,11 @@
 package com.adc.notificationrate
 
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.Application
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -16,16 +21,6 @@ class NotificationPoster(private val application: Application) {
 
     private val TEN_MINUTES = 10*60*1000
 
-    private lateinit var accessibilityManager: AccessibilityManager
-
-    private val notificationManagerCompat = NotificationManagerCompat.from(application)
-
-    private val mainLoopHandler = Handler(Looper.getMainLooper())
-
-    private var intervalTimer: PeriodicRunnable? = null
-
-    private var repeatTimer: PeriodicRunnable? = null
-
     var isTestRunning = AtomicBoolean(false)
 
     var startTestTimeStamp = 0L
@@ -40,7 +35,34 @@ class NotificationPoster(private val application: Application) {
 
     var intervalCallsCounter = 0
 
-    var notificationCounter = 0
+    var notificationPostedCount = 0
+
+    private val notificationManagerCompat = NotificationManagerCompat.from(application)
+
+    private val mainLoopHandler = Handler(Looper.getMainLooper())
+
+    private var intervalTimer: PeriodicRunnable? = null
+
+    private var repeatTimer: PeriodicRunnable? = null
+
+    private var isSubscribedToNotificationUpdates = false
+
+    private var notificationSentCount = 0
+
+    private val notificationUpdatesReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+
+            intent?.let {
+
+                notificationPostedCount = it.getIntExtra("notificationCount", -1)
+
+                mainLoopHandler.post { notificationTestCallback?.onCounterUpdate(notificationPostedCount) }
+
+            }
+
+        }
+
+    }
 
     fun startTest(
             batchCap: Int,
@@ -49,7 +71,14 @@ class NotificationPoster(private val application: Application) {
             notificationTestCallback: NotificationTestCallback
     ) {
 
-        if (isTestRunning.getAndSet(true)) {
+        if (isTestRunning.get()) {
+            return
+        }
+
+        if (! isAccessibilityServiceEnabled()) {
+
+            notificationTestCallback.onServiceDisabled()
+
             return
         }
 
@@ -63,8 +92,72 @@ class NotificationPoster(private val application: Application) {
 
         this.notificationTestCallback = notificationTestCallback
 
+        application.sendBroadcast(
+                Intent(NotificationAccessibilityService.INTENT_ACTION_NOTIFICATION_TEST_RESET)
+        )
+
+        subscribeToNotificationCounterUpdates()
+
         startRepeatTimer()
 
+        isTestRunning.set(true)
+
+    }
+
+    fun stopTest() {
+
+        isTestRunning.set(false)
+
+        intervalTimer?.stop()
+
+        repeatTimer?.stop()
+
+        unSubscribeToNotificationCounterUpdates()
+
+        startTestTimeStamp = 0L
+
+        batchCap = 0
+
+        intervalMillis = 0L
+
+        repeatMillis = 0L
+
+        intervalCallsCounter = 0
+
+        notificationPostedCount = 0
+
+        notificationSentCount = 0
+
+        notificationTestCallback?.onTestStop()
+
+        notificationTestCallback = null
+    }
+
+    private fun isAccessibilityServiceEnabled(): Boolean {
+
+        val accessibilityManager
+                = application.getSystemService(Context.ACCESSIBILITY_SERVICE)
+                as AccessibilityManager
+
+        val accessibilityServices =
+                accessibilityManager
+                        .getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+
+        Logger.log("Accessibility Service List size: " + accessibilityServices.size)
+
+        var serviceFoundCount = 0
+
+        for (info in accessibilityServices) {
+
+            Logger.log("Accessibility Service: " + info.id)
+
+            if (info.id.contains(application.packageName, true)) {
+                serviceFoundCount ++
+            }
+
+        }
+
+        return serviceFoundCount > 0
     }
 
     private fun startRepeatTimer() {
@@ -89,7 +182,7 @@ class NotificationPoster(private val application: Application) {
 
     }
 
-    fun repeatCB() {
+    private fun repeatCB() {
 
         val now = System.currentTimeMillis()
 
@@ -109,13 +202,13 @@ class NotificationPoster(private val application: Application) {
 
             isTestRunning.set(false)
 
-            mainLoopHandler.post { notificationTestCallback?.onLastBurst() }
+            mainLoopHandler.post { notificationTestCallback?.onTestStop() }
 
         }
 
     }
 
-    fun intervalCB() {
+    private fun intervalCB() {
 
         if (intervalCallsCounter >= batchCap) {
 
@@ -127,9 +220,9 @@ class NotificationPoster(private val application: Application) {
 
         intervalCallsCounter ++
 
-        notificationCounter ++
+        notificationSentCount ++
 
-        postNotification(notificationCounter, notificationCounter, startTestTimeStamp)
+        postNotification(notificationSentCount, notificationSentCount, startTestTimeStamp)
 
     }
 
@@ -154,14 +247,42 @@ class NotificationPoster(private val application: Application) {
 
     }
 
+    private fun subscribeToNotificationCounterUpdates() {
+
+        application.registerReceiver(
+                notificationUpdatesReceiver,
+                IntentFilter(NotificationAccessibilityService.INTENT_ACTION_NOTIFICATION_COUNT_UPDATE)
+        )
+
+        isSubscribedToNotificationUpdates = true
+
+    }
+
+    private fun unSubscribeToNotificationCounterUpdates() {
+
+        if (isSubscribedToNotificationUpdates) {
+
+            application.unregisterReceiver(notificationUpdatesReceiver)
+
+            isSubscribedToNotificationUpdates = false
+
+        }
+
+    }
+
 }
 
+
 interface NotificationTestCallback {
+
+    fun onServiceDisabled()
 
     fun onTestStart()
 
     fun onRepeatBurst(timeLeft: Int)
 
-    fun onLastBurst()
+    fun onCounterUpdate(count: Int)
+
+    fun onTestStop()
 
 }
