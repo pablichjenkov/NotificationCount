@@ -1,4 +1,4 @@
-package com.adc.notificationrate
+package com.adc.notificationrate.execution
 
 import android.os.Handler
 import android.os.Looper
@@ -14,7 +14,7 @@ interface DelayExecutor {
 class BgScheduledExecutor private constructor(
         corePoolSize: Int
 ): ScheduledThreadPoolExecutor(corePoolSize),
-    DelayExecutor
+        DelayExecutor
 {
 
     override fun postNow(runnable: Runnable) {

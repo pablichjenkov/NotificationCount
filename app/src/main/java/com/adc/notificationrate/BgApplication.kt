@@ -7,10 +7,10 @@ import android.content.Intent
 import android.net.ConnectivityManager
 import android.os.Build
 import android.os.PowerManager
-import android.widget.Toast
 import androidx.core.app.NotificationManagerCompat
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
+import com.adc.notificationrate.tester.NotificationPoster
+import com.adc.notificationrate.services.FgService
+import com.adc.notificationrate.tester.NetworkTester
 
 
 class BgApplication : Application() {
@@ -21,12 +21,16 @@ class BgApplication : Application() {
 
     lateinit var notificationPoster: NotificationPoster
 
+    lateinit var networkTester: NetworkTester
+
     override fun onCreate() {
         super.onCreate()
 
         instance = this
 
         notificationPoster = NotificationPoster(this)
+
+        networkTester = NetworkTester(this)
 
         Logger.log("BgApplication::onCreate()")
 

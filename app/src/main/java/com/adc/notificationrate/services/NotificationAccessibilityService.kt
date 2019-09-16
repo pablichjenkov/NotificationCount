@@ -1,4 +1,4 @@
-package com.adc.notificationrate
+package com.adc.notificationrate.services
 
 import android.view.accessibility.AccessibilityEvent
 import android.accessibilityservice.AccessibilityServiceInfo
@@ -9,6 +9,9 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.SystemClock
+import com.adc.notificationrate.Logger
+import com.adc.notificationrate.execution.BgScheduledExecutor
+import com.adc.notificationrate.execution.PeriodicRunnable
 
 
 class NotificationAccessibilityService : AccessibilityService() {

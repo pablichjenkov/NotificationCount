@@ -1,5 +1,6 @@
-package com.adc.notificationrate
+package com.adc.notificationrate.execution
 
+import com.adc.notificationrate.Logger
 import java.util.concurrent.atomic.AtomicBoolean
 
 

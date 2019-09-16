@@ -10,9 +10,17 @@ import androidx.core.app.NotificationManagerCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import android.content.Intent
 import android.provider.Settings
+import com.adc.notificationrate.tester.NotificationTestCallback
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 
 
 class MainActivity : AppCompatActivity() {
+
+    private var disposables = CompositeDisposable()
+
+    private var isSubscribedToNetworkTest = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,7 +29,9 @@ class MainActivity : AppCompatActivity() {
 
         initNotificationCenter()
 
-        setupView()
+        renderNotificationTestView()
+
+        renderNetworkTestView()
 
     }
 
@@ -29,6 +39,15 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         BgApplication.instance.startFgService()
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        disposables.clear()
+
+        isSubscribedToNetworkTest = false
 
     }
 
@@ -58,7 +77,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun setupView() {
+    private fun renderNotificationTestView() {
 
         val isTestRunning = BgApplication.instance.notificationPoster.isTestRunning.get()
 
@@ -78,9 +97,9 @@ class MainActivity : AppCompatActivity() {
 
             }
 
-            startTestBtn.text = "Stop"
+            startNotificationTestBtn.text = "Stop"
 
-            startTestBtn.setOnClickListener {
+            startNotificationTestBtn.setOnClickListener {
 
                 BgApplication
                         .instance
@@ -91,9 +110,9 @@ class MainActivity : AppCompatActivity() {
 
         } else {
 
-            startTestBtn.text = "Start"
+            startNotificationTestBtn.text = "Start"
 
-            startTestBtn.setOnClickListener {
+            startNotificationTestBtn.setOnClickListener {
 
                 val batchCap = batchCapInput.text.toString().toInt()
 
@@ -146,7 +165,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onTestStart() {
 
-            setupView()
+            renderNotificationTestView()
 
         }
 
@@ -164,7 +183,60 @@ class MainActivity : AppCompatActivity() {
 
         override fun onTestStop() {
 
-            setupView()
+            renderNotificationTestView()
+
+        }
+
+    }
+
+    private fun renderNetworkTestView() {
+
+        if (isSubscribedToNetworkTest) {
+
+            startNetworkTestBtn.text = "Stop"
+
+            startNetworkTestBtn.setOnClickListener {
+
+                disposables.clear()
+
+                isSubscribedToNetworkTest = false
+
+                renderNetworkTestView()
+
+            }
+
+        } else {
+
+            startNetworkTestBtn.text = "Start"
+
+            startNetworkTestBtn.setOnClickListener {
+
+                val subscription
+                        = BgApplication
+                        .instance
+                        .networkTester
+                        .startTest(10*1000)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe (
+                                {
+
+                                    networkRequestText.text = it.toString()
+
+                                },
+                                {
+
+                                    networkRequestText.text = it.message
+
+                                }
+                        )
+
+                disposables.add(subscription)
+
+                isSubscribedToNetworkTest = true
+
+                renderNetworkTestView()
+            }
 
         }
 

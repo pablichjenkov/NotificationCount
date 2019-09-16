@@ -1,4 +1,4 @@
-package com.adc.notificationrate
+package com.adc.notificationrate.tester
 
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.Application
@@ -13,6 +13,12 @@ import android.view.accessibility.AccessibilityManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.adc.notificationrate.Constants
+import com.adc.notificationrate.Logger
+import com.adc.notificationrate.R
+import com.adc.notificationrate.execution.BgScheduledExecutor
+import com.adc.notificationrate.execution.PeriodicRunnable
+import com.adc.notificationrate.services.NotificationAccessibilityService
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.ceil
 

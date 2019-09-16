@@ -1,4 +1,4 @@
-package com.adc.notificationrate
+package com.adc.notificationrate.services
 
 import android.app.*
 import android.content.Intent
@@ -6,6 +6,9 @@ import android.widget.Toast
 import android.content.Context
 import android.os.*
 import androidx.core.app.NotificationCompat
+import com.adc.notificationrate.BgApplication
+import com.adc.notificationrate.Constants
+import com.adc.notificationrate.Logger
 
 
 class FgService : Service() {

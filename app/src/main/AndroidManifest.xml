@@ -27,11 +27,11 @@
 
         </activity>
 
-        <service android:name=".FgService"
+        <service android:name=".services.FgService"
             android:enabled="true"
             android:exported="false"/>
 
-        <service android:name=".NotificationAccessibilityService"
+        <service android:name=".services.NotificationAccessibilityService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
