@@ -79,11 +79,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderNotificationTestView() {
 
-        val isTestRunning = BgApplication.instance.notificationPoster.isTestRunning.get()
+        val isTestRunning = BgApplication.instance.notificationTester.isTestRunning.get()
 
         if (isTestRunning) {
 
-            with(BgApplication.instance.notificationPoster) {
+            with(BgApplication.instance.notificationTester) {
 
                 batchCapInput.setText(batchCap.toString(10))
 
@@ -103,7 +103,7 @@ class MainActivity : AppCompatActivity() {
 
                 BgApplication
                         .instance
-                        .notificationPoster
+                        .notificationTester
                         .stopTest()
 
             }
@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity() {
 
                 BgApplication
                         .instance
-                        .notificationPoster
+                        .notificationTester
                         .startTest(
                                 batchCap,
                                 intervalMillis,

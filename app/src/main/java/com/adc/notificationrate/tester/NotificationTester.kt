@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.ceil
 
 
-class NotificationPoster(private val application: Application) {
+class NotificationTester(private val application: Application) {
 
     private val TEN_MINUTES = 10*60*1000
 
