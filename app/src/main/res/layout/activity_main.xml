@@ -1,186 +1,235 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="24dp">
+    android:layout_height="match_parent">
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/notificationTestLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        android:background="@color/colorAccent"
-        android:text="Notification Test:"
-        android:textStyle="bold"/>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/batchCapLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Notification per batch: "
-        app:layout_constraintTop_toBottomOf="@+id/notificationTestLabel"
-        app:layout_constraintLeft_toLeftOf="parent"/>
-
-    <androidx.appcompat.widget.AppCompatEditText
-        android:id="@+id/batchCapInput"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBaseline_toBaselineOf="@+id/batchCapLabel"
-        android:text="2"/>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/intervalLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Notification Interval(millis): "
-        app:layout_constraintTop_toBottomOf="@+id/batchCapLabel"
-        app:layout_constraintLeft_toLeftOf="parent"/>
-
-    <androidx.appcompat.widget.AppCompatEditText
-        android:id="@+id/intervalInput"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/batchCapLabel"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBaseline_toBaselineOf="@+id/intervalLabel"
-        android:text="100"/>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/repeatLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Repeat every(sec): "
-        app:layout_constraintTop_toBottomOf="@+id/intervalLabel"
-        app:layout_constraintLeft_toLeftOf="parent"/>
-
-    <androidx.appcompat.widget.AppCompatEditText
-        android:id="@+id/repeatInput"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:gravity="center_horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/intervalLabel"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBaseline_toBaselineOf="@+id/repeatLabel"
-        android:text="5"/>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/timeLeftLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Time Left: "
-        app:layout_constraintTop_toBottomOf="@+id/repeatLabel"
-        app:layout_constraintLeft_toLeftOf="parent"/>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/timeLeftText"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:gravity="center_horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/repeatLabel"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBaseline_toBaselineOf="@+id/timeLeftLabel"
-        android:text="0"/>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/notificationPostedLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Notifications Count: "
-        app:layout_constraintTop_toBottomOf="@+id/timeLeftLabel"
-        app:layout_constraintLeft_toLeftOf="parent"/>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/notificationPostedText"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:gravity="center_horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/timeLeftLabel"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBaseline_toBaselineOf="@+id/notificationPostedLabel"
-        android:text="0"/>
-
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/startNotificationTestBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@+id/notificationPostedLabel"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"/>
-
-    <View
-        android:id="@+id/networkTestBarrier"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="8dp"
-        android:background="@android:color/black"
-        app:layout_constraintTop_toBottomOf="@+id/startNotificationTestBtn"/>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/networkRequestLabel"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:background="@color/colorAccent"
-        android:text="Network Test:"
-        android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@+id/networkTestBarrier"
-        app:layout_constraintLeft_toLeftOf="parent"/>
+        android:padding="24dp">
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/networkRequestText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@+id/networkRequestLabel"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        android:gravity="center_horizontal"
-        android:textSize="20sp"
-        android:text="-"/>
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/notificationTestLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@color/colorAccent"
+            android:text="Notification Test:"
+            android:textStyle="bold"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/startNetworkTestBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@+id/networkRequestText"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"/>
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/batchCapLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Notification per batch: "
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/notificationTestLabel" />
 
-    <View
-        android:id="@+id/bleTestBarrier"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="8dp"
-        android:background="@android:color/black"
-        app:layout_constraintTop_toBottomOf="@+id/startNetworkTestBtn"/>
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/batchCapInput"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="2"
+            app:layout_constraintBaseline_toBaselineOf="@+id/batchCapLabel"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/bleTestLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:background="@color/colorAccent"
-        android:text="Ble Test:"
-        android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@+id/bleTestBarrier"
-        app:layout_constraintLeft_toLeftOf="parent"/>
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/intervalLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Notification Interval(millis): "
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/batchCapLabel" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/intervalInput"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="100"
+            app:layout_constraintBaseline_toBaselineOf="@+id/intervalLabel"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/batchCapLabel" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/repeatLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Repeat every(sec): "
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/intervalLabel" />
+
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/repeatInput"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:gravity="center_horizontal"
+            android:text="5"
+            app:layout_constraintBaseline_toBaselineOf="@+id/repeatLabel"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/intervalLabel" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/timeLeftLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Time Left: "
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/repeatLabel" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/timeLeftText"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:gravity="center_horizontal"
+            android:text="0"
+            app:layout_constraintBaseline_toBaselineOf="@+id/timeLeftLabel"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/repeatLabel" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/notificationPostedLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Notifications Count: "
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/timeLeftLabel" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/notificationPostedText"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:gravity="center_horizontal"
+            android:text="0"
+            app:layout_constraintBaseline_toBaselineOf="@+id/notificationPostedLabel"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/timeLeftLabel" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/startNotificationTestBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/notificationPostedLabel" />
+
+        <View
+            android:id="@+id/networkTestBarrier"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:background="@android:color/black"
+            app:layout_constraintTop_toBottomOf="@+id/startNotificationTestBtn" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/networkRequestLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@color/colorAccent"
+            android:text="Network Test:"
+            android:textStyle="bold"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/networkTestBarrier" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/networkRequestText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_horizontal"
+            android:text="-"
+            android:textSize="20sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/networkRequestLabel" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/startNetworkTestBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/networkRequestText" />
+
+        <View
+            android:id="@+id/bleTestBarrier"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:background="@android:color/black"
+            app:layout_constraintTop_toBottomOf="@+id/startNetworkTestBtn" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/bleTestLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@color/colorAccent"
+            android:text="Ble Test:"
+            android:textStyle="bold"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/bleTestBarrier" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/scanResultText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_horizontal"
+            android:text="-"
+            android:textSize="18sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/bleTestLabel" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/startScanTestBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Scan"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/scanResultText" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/bleResultText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_horizontal"
+            android:text="-"
+            android:textSize="18sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/startScanTestBtn" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/startBleTestBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Start"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/bleResultText" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

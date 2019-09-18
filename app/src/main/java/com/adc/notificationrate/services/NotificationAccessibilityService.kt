@@ -94,7 +94,7 @@ class NotificationAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(e: AccessibilityEvent) {
 
-        Logger.log("========== onAccessibilityEvent: ${e.action}")
+        Logger.log("========== onAccessibilityEvent: ${e.eventType}")
 
         if (e.eventType == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
 

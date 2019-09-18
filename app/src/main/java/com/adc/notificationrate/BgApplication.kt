@@ -10,6 +10,7 @@ import android.os.PowerManager
 import androidx.core.app.NotificationManagerCompat
 import com.adc.notificationrate.tester.NotificationTester
 import com.adc.notificationrate.services.FgService
+import com.adc.notificationrate.tester.BleTester
 import com.adc.notificationrate.tester.NetworkTester
 
 
@@ -23,8 +24,12 @@ class BgApplication : Application() {
 
     lateinit var networkTester: NetworkTester
 
+    lateinit var bleTester: BleTester
+
     override fun onCreate() {
         super.onCreate()
+
+        Logger.log("BgApplication::onCreate()")
 
         instance = this
 
@@ -32,7 +37,7 @@ class BgApplication : Application() {
 
         networkTester = NetworkTester(this)
 
-        Logger.log("BgApplication::onCreate()")
+        bleTester = BleTester(this)
 
     }
 

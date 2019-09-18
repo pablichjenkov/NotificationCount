@@ -1,10 +1,15 @@
 package com.adc.notificationrate.services
 
-import android.app.*
-import android.content.Intent
-import android.widget.Toast
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
 import android.content.Context
-import android.os.*
+import android.content.Intent
+import android.os.Binder
+import android.os.Build
+import android.os.IBinder
+import android.os.SystemClock
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.adc.notificationrate.BgApplication
 import com.adc.notificationrate.Constants
@@ -14,9 +19,6 @@ import com.adc.notificationrate.Logger
 class FgService : Service() {
 
     private val localBinder = LocalBinder()
-
-    private var startCmdCount = 0
-
 
     override fun onCreate() {
         super.onCreate()
@@ -28,8 +30,6 @@ class FgService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         Logger.log("========== FgService::onStartCommand() ==========")
-
-        startCmdCount ++
 
         postForegroundServiceNotification()
 
@@ -63,9 +63,9 @@ class FgService : Service() {
 
         val milliSecDiff = now - BgApplication.instance.mainActivityLastStopTimestamp
 
-        val secDiff = milliSecDiff / 60*60*1000
+        val secDiff = milliSecDiff / 60*1000
 
-        Logger.log("========== BgService::onDestroy() [BG_UPTIME=$secDiff hours; START_CMD_COUNT=$startCmdCount] ==========")
+        Logger.log("========== BgService::onDestroy() [BG_UPTIME=$secDiff minutes ==========")
 
     }
 

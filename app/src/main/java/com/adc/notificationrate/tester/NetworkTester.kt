@@ -27,7 +27,7 @@ class NetworkTester(private val application: Application) {
     ): Observable<RequestResp>  {
 
         return Observable
-                .interval(0, repeatMillis, TimeUnit.MILLISECONDS)
+                .interval(1, repeatMillis, TimeUnit.MILLISECONDS)
                 .map {
 
                     val request = Request.Builder()
