@@ -8,24 +8,22 @@ import android.bluetooth.le.ScanResult
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
-import com.adc.notificationrate.ble.*
+import com.adc.notificationrate.ble.AdcScanError
+import com.adc.notificationrate.ble.AdcScanEvent
+import com.adc.notificationrate.ble.BleScanner
+import com.adc.notificationrate.tester.BleTestEvent
+import com.adc.notificationrate.tester.BleTester
 import com.adc.notificationrate.tester.NotificationTestCallback
-import io.reactivex.Observable
-import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
@@ -43,8 +41,6 @@ class MainActivity : AppCompatActivity() {
     private var isSubscribedToBleSocket = false
 
     private var inRangeDevices = listOf<ScanResult>()
-
-    private var bleCount = 10
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,16 +67,42 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == Constants.REQ_CODE_ENABLE_BT) {
+
+            refreshBleScanObserver(BgApplication.instance.bleTester.bleScanner)
+
+        }
+
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == Constants.REQ_CODE_PERMISSION_LOCATION) {
+
+            refreshBleScanObserver(BgApplication.instance.bleTester.bleScanner)
+
+        }
+
+    }
+
     override fun onDestroy() {
         super.onDestroy()
 
         networkDisposables.clear()
 
-        bleScanDisposables.clear()
-
         isSubscribedToNetworkTest = false
 
+        bleScanDisposables.clear()
+
         isSubscribedToBleScan = false
+
+        bleSocketDisposables.clear()
+
+        isSubscribedToBleSocket = false
 
     }
 
@@ -288,9 +310,7 @@ class MainActivity : AppCompatActivity() {
 
             if (! isSubscribedToBleScan) {
 
-                isSubscribedToBleScan = true
-
-                subscribeToBleScanEvents(bleScanner)
+                refreshBleScanObserver(bleScanner)
             }
 
             startScanTestBtn.setOnClickListener {
@@ -307,16 +327,20 @@ class MainActivity : AppCompatActivity() {
 
             startScanTestBtn.setOnClickListener {
 
-                subscribeToBleScanEvents(bleScanner)
+                refreshBleScanObserver(bleScanner)
 
-                isSubscribedToBleScan = true
             }
 
         }
 
     }
 
-    private fun subscribeToBleScanEvents(bleScanner: BleScanner) {
+    private fun refreshBleScanObserver(bleScanner: BleScanner) {
+
+        isSubscribedToBleScan = true
+
+        // Remove previous pipes instances
+        bleScanDisposables.clear()
 
         val disposable = bleScanner
                 .scan()
@@ -425,8 +449,6 @@ class MainActivity : AppCompatActivity() {
 
         val bleTester = BgApplication.instance.bleTester
 
-        val bleCentralService = bleTester.bleCentralService
-
         val isTesting = bleTester.isTesting
 
         if (isTesting) {
@@ -439,21 +461,9 @@ class MainActivity : AppCompatActivity() {
 
             }
 
-            val deviceInTest = bleTester.deviceInTest ?: return
-
-            var socket = bleCentralService.getExistingSocket(deviceInTest)
-
-            if (socket == null) {
-
-                socket = bleCentralService.createSocket(deviceInTest)
-
-            }
-
             if (! isSubscribedToBleSocket) {
 
-                socket.socketProcessor
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .safeSubscribe(newSocketObserver(socket))
+                subscribeToBleSocketEvents(bleTester)
 
             }
 
@@ -467,11 +477,9 @@ class MainActivity : AppCompatActivity() {
 
                     val sensorDevice = inRangeDevices[0]
 
-                    val socket = bleCentralService.createSocket(sensorDevice.device)
+                    subscribeToBleSocketEvents(bleTester)
 
-                    socket.socketProcessor
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(newSocketObserver(socket))
+                    bleTester.startTest(sensorDevice.device, 5000)
 
                 } else {
 
@@ -489,134 +497,50 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun newSocketObserver(bleSocket: BleSocket): Observer<AdcSocketEvent> {
+    private fun subscribeToBleSocketEvents(bleTester: BleTester) {
 
-        return object : Observer<AdcSocketEvent> {
+        val disposable
+                = bleTester
+                .eventPipe()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        { event ->
 
-            override fun onSubscribe(d: Disposable) {
+                            when (event) {
 
-                bleSocketDisposables.add(d)
+                                is BleTestEvent.Start -> {
 
-                isSubscribedToBleSocket = true
+                                    bleResultText.text = "Ble Test Starting ..."
 
-                Handler(Looper.getMainLooper()).postDelayed({ bleSocket.connect() }, 10)
+                                    renderBleConnectButtonView()
 
-            }
-
-            override fun onNext(event: AdcSocketEvent) {
-
-                reduceSocketEvent(bleSocket, event)
-
-            }
-
-            override fun onError(th: Throwable) {
-
-                bleResultText.text = th.message
-
-            }
-
-            override fun onComplete() {
-
-                renderBleConnectButtonView()
-
-            }
-
-        }
-
-    }
-
-    private fun reduceSocketEvent(bleSocket: BleSocket, event: AdcSocketEvent) {
-
-        when (event) {
-
-            AdcSocketEvent.Connecting -> {
-
-                bleResultText.text = "Connecting ..."
-
-            }
-
-            AdcSocketEvent.ServiceDiscovery -> {
-
-                bleResultText.text = "Service Discovery ..."
-
-            }
-
-            AdcSocketEvent.Connected -> {
-
-                bleResultText.text = "Connected"
-
-                BgApplication.instance.bleTester.startTest(bleSocket.bleDevice, 5000)
-
-                renderBleConnectButtonView()
-
-                val disposable = Observable
-                        .interval(2, 5, TimeUnit.SECONDS)
-                        .map {
-
-                        }
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(
-                                {
-                                    bleCount ++
-
-                                    if (bleCount >= 100) { bleCount = 10 }
-
-                                    bleSocket.send(bleCount.toString(10))
-
-
-                                },
-                                {
-                                    // ignore
                                 }
-                        )
 
-                bleSocketDisposables.add(disposable)
+                                is BleTestEvent.Update -> {
 
-            }
+                                    bleResultText.text = event.connectionStatus
 
-            AdcSocketEvent.Disconnected -> {
+                                }
 
-                bleResultText.text = "Disconnected"
+                                is BleTestEvent.End -> {
 
-                renderBleConnectButtonView()
+                                    bleResultText.text = "-"
 
-            }
+                                }
 
-            is AdcSocketEvent.Data -> {
+                            }
 
-                when (event) {
+                        },
+                        {
+                            th -> bleResultText.text = th.message
+                        },
+                        {
+                            renderBleConnectButtonView()
+                        }
+                )
 
-                    is AdcSocketEvent.Data.Read -> {
 
-                        bleResultText.text = "Read success: ${event.data}"
-
-                    }
-
-                    is AdcSocketEvent.Data.ErrorRead -> {
-
-                        bleResultText.text = "Error Reading"
-
-                    }
-
-                    is AdcSocketEvent.Data.Write -> {
-
-                        // if event.postedValue == writeValue
-
-                        bleResultText.text = "Write success"
-
-                    }
-
-                    is AdcSocketEvent.Data.ErrorWrite -> {
-
-                        bleResultText.text = "Error Writing"
-
-                    }
-
-                }
-
-            }
-
-        }
+        bleSocketDisposables.add(disposable)
 
     }
 

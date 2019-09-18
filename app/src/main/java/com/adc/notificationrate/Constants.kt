@@ -27,6 +27,9 @@ object Constants {
     var SENSOR_OUTPUT_CLIENT_CONF_DESC = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
     /*
+
+    STANDARD BASE_UUID:	0000[0000]-0000-1000-8000-00805F9B34FB
+    [XXXX]: 16 bit UUID short offset
       _ _ _ _ _           _ _ _ _ _
         Phone |           | Sensor
               |           |

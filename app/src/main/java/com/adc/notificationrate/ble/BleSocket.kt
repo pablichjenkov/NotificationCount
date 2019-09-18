@@ -29,7 +29,7 @@ class BleSocket(
     var socketProcessor = PublishSubject.create<AdcSocketEvent>().toSerialized()
 
 
-    fun connect() {
+    fun open() {
 
         // Previously connected device.  Try to reconnect.
         /*if (bleGatt != null) {
@@ -84,7 +84,7 @@ class BleSocket(
 
     }
 
-    fun stop() {
+    fun close() {
 
         connectionState = ConnectionState.Disconnected
 
@@ -289,16 +289,16 @@ class BleSocket(
 
         val bleGattLocal = bleGatt ?: return false
 
-        val uartService = bleGattLocal.getService(Constants.ADC_SENSOR_SERVICE)
+        val adcSensorService = bleGattLocal.getService(Constants.ADC_SENSOR_SERVICE)
 
-        if (uartService == null) {
+        if (adcSensorService == null) {
 
             Logger.log("Setup Notifications fail: Sensor Service not found!")
 
             return false
         }
 
-        writeChar = uartService.getCharacteristic(Constants.SENSOR_INPUT_CHAR)
+        writeChar = adcSensorService.getCharacteristic(Constants.SENSOR_INPUT_CHAR)
 
         if (writeChar == null) {
 
@@ -307,7 +307,7 @@ class BleSocket(
             return false
         }
 
-        val readCharLocal = uartService.getCharacteristic(Constants.SENSOR_OUTPUT_CHAR)
+        val readCharLocal = adcSensorService.getCharacteristic(Constants.SENSOR_OUTPUT_CHAR)
 
         if (readCharLocal == null) {
 
