@@ -1,17 +1,14 @@
 package com.adc.notificationrate.services
 
-import android.view.accessibility.AccessibilityEvent
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
 import android.os.SystemClock
+import android.view.accessibility.AccessibilityEvent
 import com.adc.notificationrate.Logger
-import com.adc.notificationrate.execution.BgScheduledExecutor
-import com.adc.notificationrate.execution.PeriodicRunnable
 
 
 class NotificationAccessibilityService : AccessibilityService() {
@@ -27,7 +24,7 @@ class NotificationAccessibilityService : AccessibilityService() {
 
             intent?.run {
 
-                if (INTENT_ACTION_NOTIFICATION_TEST_RESET.equals(action, true)) {
+                if (INTENT_ACTION_NOTIFICATION_TEST_RESET_COUNT.equals(action, true)) {
 
                     notificationCounter = 0
 
@@ -40,9 +37,11 @@ class NotificationAccessibilityService : AccessibilityService() {
 
     companion object {
 
-        val INTENT_ACTION_NOTIFICATION_TEST_RESET = "com.adc.notificationrate.action.notification.test.reset"
+        val INTENT_ACTION_NOTIFICATION_TEST_RESET_COUNT =
+                "com.adc.notificationrate.NotificationAccessibilityService.action.resetCount"
 
-        val INTENT_ACTION_NOTIFICATION_COUNT_UPDATE = "com.adc.notificationrate.action.notification.test.count"
+        val INTENT_ACTION_NOTIFICATION_TEST_COUNT_UPDATE =
+                "com.adc.notificationrate.NotificationAccessibilityService.event.countUpdate"
 
     }
 
@@ -52,7 +51,7 @@ class NotificationAccessibilityService : AccessibilityService() {
         IntentFilter()
                 .apply {
 
-                    addAction(INTENT_ACTION_NOTIFICATION_TEST_RESET)
+                    addAction(INTENT_ACTION_NOTIFICATION_TEST_RESET_COUNT)
 
                 }.also {
 
@@ -76,19 +75,6 @@ class NotificationAccessibilityService : AccessibilityService() {
         info.packageNames = arrayOf("com.adc.notificationrate")
 
         serviceInfo = info
-
-        if (isEmulator()) {
-
-            PeriodicRunnable(
-                    BgScheduledExecutor.instance,// MainScheduledExecutor.instance,
-                    {
-                        increaseCounter()
-                        broadcastCounter()
-                    },
-                    3000
-            ).also { it.start() }
-
-        }
 
     }
 
@@ -121,42 +107,21 @@ class NotificationAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         super.onDestroy()
 
+        Logger.log("========== NotificationAccessibilityService::onDestroy()")
+
         if (isClientReceiverRegistered) {
             unregisterReceiver(clientRequestReceiver)
         }
 
     }
 
-    private fun increaseCounter() {
-
-        if (notificationCounter == 100) {
-            notificationCounter = 0
-        }
-
-        notificationCounter ++
-
-    }
-
     private fun broadcastCounter() {
 
         Intent().also { intent ->
-            intent.action = INTENT_ACTION_NOTIFICATION_COUNT_UPDATE
+            intent.action = INTENT_ACTION_NOTIFICATION_TEST_COUNT_UPDATE
             intent.putExtra("notificationCount", notificationCounter)
             sendBroadcast(intent)
         }
-
-    }
-
-    private fun isEmulator(): Boolean {
-
-        return Build.FINGERPRINT.startsWith("generic")
-                || Build.FINGERPRINT.startsWith("unknown")
-                || Build.MODEL.contains("google_sdk")
-                || Build.MODEL.contains("Emulator")
-                || Build.MODEL.contains("Android SDK built for x86")
-                || Build.MANUFACTURER.contains("Genymotion")
-                || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
-                || "google_sdk".equals(Build.PRODUCT);
 
     }
 

@@ -2,13 +2,17 @@ package com.adc.notificationrate.tester
 
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.Application
+import android.app.Notification
+import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.view.accessibility.AccessibilityManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -18,14 +22,20 @@ import com.adc.notificationrate.Logger
 import com.adc.notificationrate.R
 import com.adc.notificationrate.execution.BgScheduledExecutor
 import com.adc.notificationrate.execution.PeriodicRunnable
-import com.adc.notificationrate.services.NotificationAccessibilityService
+import com.adc.notificationrate.services.NotificationCountService
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.ceil
+import android.text.TextUtils
+import android.content.ComponentName
+import android.provider.Settings
+import com.adc.notificationrate.services.NotificationAccessibilityService
 
 
 class NotificationTester(private val application: Application) {
 
-    private val TEN_MINUTES = 10*60*1000
+    private val useAccessibilityService = false
+
+    private val TEN_MINUTES = 10 * 60 * 1000
 
     var isTestRunning = AtomicBoolean(false)
 
@@ -81,11 +91,25 @@ class NotificationTester(private val application: Application) {
             return
         }
 
-        if (! isAccessibilityServiceEnabled()) {
+        if (useAccessibilityService) {
 
-            notificationTestCallback.onServiceDisabled()
+            if (!isAccessibilityServiceEnabled()) {
 
-            return
+                notificationTestCallback.onAccessibilityServiceDisabled()
+
+                return
+            }
+
+        } else {
+
+            if (!isNotificationListenerAccessGranted()) {
+
+                notificationTestCallback.onNotificationServiceDisabled()
+
+                return
+
+            }
+
         }
 
         startTestTimeStamp = System.currentTimeMillis()
@@ -99,7 +123,10 @@ class NotificationTester(private val application: Application) {
         this.notificationTestCallback = notificationTestCallback
 
         application.sendBroadcast(
-                Intent(NotificationAccessibilityService.INTENT_ACTION_NOTIFICATION_TEST_RESET)
+                if (useAccessibilityService)
+                    Intent(NotificationAccessibilityService.INTENT_ACTION_NOTIFICATION_TEST_RESET_COUNT)
+                else
+                    Intent(NotificationCountService.INTENT_ACTION_NOTIFICATION_TEST_RESET_COUNT)
         )
 
         subscribeToNotificationCounterUpdates()
@@ -139,10 +166,54 @@ class NotificationTester(private val application: Application) {
         notificationTestCallback = null
     }
 
+    private fun isNotificationListenerAccessGranted(): Boolean {
+
+        var result = false
+
+        val notificationManager = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= 27) {
+
+            result =
+                    notificationManager
+                            .isNotificationListenerAccessGranted(
+                                    ComponentName(application, NotificationCountService::class.java)
+                            )
+
+        } else {
+
+            val flat = Settings.Secure.getString(application.contentResolver, "enabled_notification_listeners")
+
+            if (!TextUtils.isEmpty(flat)) {
+
+                val names = flat.split(":".toRegex())
+
+                for (name in names) {
+
+                    val cn = ComponentName.unflattenFromString(name)
+
+                    if (cn != null) {
+
+                        if (TextUtils.equals(application.packageName, cn.packageName)) {
+
+                            result = true
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        return result
+
+    }
+
     private fun isAccessibilityServiceEnabled(): Boolean {
 
-        val accessibilityManager
-                = application.getSystemService(Context.ACCESSIBILITY_SERVICE)
+        val accessibilityManager = application.getSystemService(Context.ACCESSIBILITY_SERVICE)
                 as AccessibilityManager
 
         val accessibilityServices =
@@ -158,7 +229,7 @@ class NotificationTester(private val application: Application) {
             Logger.log("Accessibility Service: " + info.id)
 
             if (info.id.contains(application.packageName, true)) {
-                serviceFoundCount ++
+                serviceFoundCount++
             }
 
         }
@@ -208,7 +279,7 @@ class NotificationTester(private val application: Application) {
 
             isTestRunning.set(false)
 
-            mainLoopHandler.post { notificationTestCallback?.onTestStop() }
+            mainLoopHandler.post { stopTest() }
 
         }
 
@@ -224,9 +295,9 @@ class NotificationTester(private val application: Application) {
 
         }
 
-        intervalCallsCounter ++
+        intervalCallsCounter++
 
-        notificationSentCount ++
+        notificationSentCount++
 
         postNotification(notificationSentCount, notificationSentCount, startTestTimeStamp)
 
@@ -255,9 +326,15 @@ class NotificationTester(private val application: Application) {
 
     private fun subscribeToNotificationCounterUpdates() {
 
+        val intentFilter = if (useAccessibilityService) {
+            IntentFilter(NotificationAccessibilityService.INTENT_ACTION_NOTIFICATION_TEST_COUNT_UPDATE)
+        } else {
+            IntentFilter(NotificationCountService.INTENT_ACTION_NOTIFICATION_TEST_COUNT_UPDATE)
+        }
+
         application.registerReceiver(
                 notificationUpdatesReceiver,
-                IntentFilter(NotificationAccessibilityService.INTENT_ACTION_NOTIFICATION_COUNT_UPDATE)
+                intentFilter
         )
 
         isSubscribedToNotificationUpdates = true
@@ -276,12 +353,94 @@ class NotificationTester(private val application: Application) {
 
     }
 
+    fun postNotification(notificationId: Int, notification: Notification) {
+
+        with(NotificationManagerCompat.from(application)) {
+            // notificationId is a unique int for each notification that you must define
+            notify(notificationId, notification)
+        }
+
+    }
+
+    fun getNotificationData(): String {
+
+        val powerManager = application.getSystemService(Context.POWER_SERVICE) as PowerManager
+
+        /*
+        val wl = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "com.adc.bgprocess:bgApplication")
+
+
+        wl.acquire()
+        ..screen will stay on during this section..
+        wl.release()
+        */
+
+        val batterySaverInfo = if (Build.VERSION.SDK_INT >= 21) {
+
+            "isPowerSaveMode(Battery Saver) = ${powerManager.isPowerSaveMode} \n"
+
+        } else "isPowerSaveMode(Battery Saver) = N/A \n"
+
+        val dozeInfo = if (Build.VERSION.SDK_INT >= 23) {
+
+            "isDeviceIdleMode(Doze/StandBy) = ${powerManager.isDeviceIdleMode} \n"
+
+        } else "isDeviceIdleMode(Doze/StandBy) = N/A \n"
+
+        val batteryIgnoreOptInfo = if (Build.VERSION.SDK_INT >= 23) {
+
+            "isIgnoringBatteryOptimizations = ${powerManager.isIgnoringBatteryOptimizations(application.packageName)} \n"
+
+        } else "isIgnoringBatteryOptimizations = N/A \n"
+
+
+        return dozeInfo + batterySaverInfo + batteryIgnoreOptInfo + getDataSaverInfo()
+
+    }
+
+    private fun getDataSaverInfo(): String {
+
+        var result = "N/A"
+
+        if (Build.VERSION.SDK_INT >= 24) {
+
+            val connectivityManager = application.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+
+            connectivityManager?.apply {
+
+                when (restrictBackgroundStatus) {
+                    ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED -> {
+                        // Background data usage is blocked for this app. Wherever possible,
+                        // the app should also use less data in the foreground.
+                        result = "RESTRICT_BACKGROUND_STATUS_ENABLED"
+                    }
+                    ConnectivityManager.RESTRICT_BACKGROUND_STATUS_WHITELISTED -> {
+                        // The app is whitelisted. Wherever possible,
+                        // the app should use less data in the foreground and background.
+                        result = "RESTRICT_BACKGROUND_STATUS_WHITELISTED"
+                    }
+                    ConnectivityManager.RESTRICT_BACKGROUND_STATUS_DISABLED -> {
+                        // Data Saver is disabled. Since the device is connected to a
+                        // metered network, the app should use less data wherever possible.
+                        result = "RESTRICT_BACKGROUND_STATUS_DISABLED"
+                    }
+                }
+
+            }
+
+        }
+
+        return "Data Saver = $result \n"
+    }
+
 }
 
 
 interface NotificationTestCallback {
 
-    fun onServiceDisabled()
+    fun onNotificationServiceDisabled()
+
+    fun onAccessibilityServiceDisabled()
 
     fun onTestStart()
 

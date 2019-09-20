@@ -17,6 +17,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.adc.notificationrate.ble.AdcScanError
 import com.adc.notificationrate.ble.AdcScanEvent
 import com.adc.notificationrate.ble.BleScanner
+import com.adc.notificationrate.services.NotificationCountService
 import com.adc.notificationrate.tester.BleTestEvent
 import com.adc.notificationrate.tester.BleTester
 import com.adc.notificationrate.tester.NotificationTestCallback
@@ -195,24 +196,41 @@ class MainActivity : AppCompatActivity() {
 
     private var notificationTestCB = object : NotificationTestCallback {
 
-        override fun onServiceDisabled() {
+        override fun onNotificationServiceDisabled() {
+
+            AlertDialog.Builder(this@MainActivity)
+                    .setMessage(R.string.notification_service_disabled_description)
+                    .setPositiveButton(
+                            "Go"
+                    ) { dialog, _ ->
+
+                        dialog.dismiss()
+
+                        NotificationCountService
+                                .getAccessToNotificationSettingsIntent()
+                                .let { startActivity(it) }
+
+                    }
+                    .create()
+                    .show()
+
+        }
+
+        override fun onAccessibilityServiceDisabled() {
 
             AlertDialog.Builder(this@MainActivity)
                     .setMessage(R.string.accessibility_service_disabled_description)
                     .setPositiveButton(
-                            "Go",
-                            { dialog, _ ->
+                            "Go"
+                    ) { dialog, _ ->
 
-                                dialog.dismiss()
+                        dialog.dismiss()
 
-                                Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).also {
+                        Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).also {
+                            startActivity(it)
+                        }
 
-                                    startActivity(it)
-
-                                }
-
-                            }
-                    )
+                    }
                     .create()
                     .show()
 
@@ -266,14 +284,13 @@ class MainActivity : AppCompatActivity() {
 
             startNetworkTestBtn.setOnClickListener {
 
-                val subscription
-                        = BgApplication
+                val subscription = BgApplication
                         .instance
                         .networkTester
-                        .startTest(10*1000)
+                        .startTest(10 * 1000)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe (
+                        .subscribe(
                                 {
 
                                     networkRequestText.text = it.toString()
@@ -308,7 +325,7 @@ class MainActivity : AppCompatActivity() {
 
             startScanTestBtn.text = "Stop Scan"
 
-            if (! isSubscribedToBleScan) {
+            if (!isSubscribedToBleScan) {
 
                 refreshBleScanObserver(bleScanner)
             }
@@ -461,7 +478,7 @@ class MainActivity : AppCompatActivity() {
 
             }
 
-            if (! isSubscribedToBleSocket) {
+            if (!isSubscribedToBleSocket) {
 
                 subscribeToBleSocketEvents(bleTester)
 
@@ -485,7 +502,7 @@ class MainActivity : AppCompatActivity() {
 
                     Toast.makeText(
                             this,
-                            "No device with UART Service UUID has been scanned",
+                            "Testing Peripheral Device has not been Scanned",
                             Toast.LENGTH_SHORT
                     ).show()
 
@@ -499,8 +516,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun subscribeToBleSocketEvents(bleTester: BleTester) {
 
-        val disposable
-                = bleTester
+        val disposable = bleTester
                 .eventPipe()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -531,8 +547,8 @@ class MainActivity : AppCompatActivity() {
                             }
 
                         },
-                        {
-                            th -> bleResultText.text = th.message
+                        { th ->
+                            bleResultText.text = th.message
                         },
                         {
                             renderBleConnectButtonView()
