@@ -1,8 +1,14 @@
 package com.adc.notificationrate.tester
 
 import android.app.Application
+import io.reactivex.BackpressureStrategy
+import io.reactivex.Flowable
+import io.reactivex.FlowableEmitter
 import io.reactivex.Observable
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Function
+import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.text.SimpleDateFormat
@@ -12,7 +18,7 @@ import java.util.concurrent.TimeUnit
 
 class NetworkTester(private val application: Application) {
 
-    private val TEN_MINUTES = 10*60*1000
+    var isRunning = false
 
     private val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
 
@@ -22,11 +28,40 @@ class NetworkTester(private val application: Application) {
 
     private var failureCount = 0
 
+    private var outboundEventSink: FlowableEmitter<NetworkTestEvent>? = null
+
+    private var networkDisposable: CompositeDisposable = CompositeDisposable()
+
+
+    fun eventPipe(): Flowable<NetworkTestEvent> {
+
+        return Flowable.create(
+                { emitter ->
+
+                    outboundEventSink = emitter
+
+                    // When the emitter un-subscribes clear its reference
+                    emitter.setCancellable { outboundEventSink = null }
+
+                },
+                BackpressureStrategy.BUFFER
+        )
+
+    }
+
     fun startTest(
             repeatMillis: Long
-    ): Observable<RequestResp>  {
+    ) {
 
-        return Observable
+        if (isRunning) {
+
+            return
+
+        }
+
+        isRunning = true
+
+        val disposable = Observable
                 .interval(1, repeatMillis, TimeUnit.MILLISECONDS)
                 .map {
 
@@ -40,33 +75,57 @@ class NetworkTester(private val application: Application) {
 
                     val timestamp = simpleDateFormat.format(Date())
 
-                    successCount ++
+                    successCount++
 
-                    RequestResp(successCount, failureCount, timestamp, response.code)
+                    NetworkTestEvent(successCount, failureCount, timestamp, response.code)
 
                 }.onErrorResumeNext(
                         Function {
 
                             val timestamp = simpleDateFormat.format(Date())
 
-                            failureCount ++
+                            failureCount++
 
                             Observable.just(
-                                    RequestResp(successCount, failureCount, timestamp, -1)
+                                    NetworkTestEvent(successCount, failureCount, timestamp, -1)
                             )
 
                         }
+                ).subscribe(
+                        {
+
+                            outboundEventSink?.onNext(it)
+
+                        },
+                        { th ->
+                            outboundEventSink?.onError(th)
+
+                            stopTest()
+                        },
+                        {
+                            stopTest()
+                        }
                 )
+
+        networkDisposable.add(disposable)
 
     }
 
     fun stopTest() {
 
+        isRunning = false
+
+        networkDisposable.clear()
+
+        outboundEventSink?.onComplete()
+
+        outboundEventSink = null
+
     }
 
 }
 
-data class RequestResp(
+data class NetworkTestEvent(
         val successCount: Int,
         val failureCount: Int,
         val timeStamp: String,

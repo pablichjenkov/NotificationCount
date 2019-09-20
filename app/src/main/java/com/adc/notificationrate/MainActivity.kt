@@ -264,18 +264,46 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderNetworkTestView() {
 
-        if (isSubscribedToNetworkTest) {
+        val networkTester = BgApplication.instance.networkTester
+
+        if (networkTester.isRunning) {
+
+            if (! isSubscribedToNetworkTest) {
+
+                val networkPipeDisposable
+                        = networkTester
+                        .eventPipe()
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                {
+
+                                    networkRequestText.text = it.toString()
+
+                                },
+                                {
+
+                                    networkRequestText.text = it.message
+
+                                }
+                        )
+
+                networkDisposables.add(networkPipeDisposable)
+
+                isSubscribedToNetworkTest = true
+            }
 
             startNetworkTestBtn.text = "Stop"
 
             startNetworkTestBtn.setOnClickListener {
+
+                networkTester.stopTest()
 
                 networkDisposables.clear()
 
                 isSubscribedToNetworkTest = false
 
                 renderNetworkTestView()
-
             }
 
         } else {
@@ -284,10 +312,9 @@ class MainActivity : AppCompatActivity() {
 
             startNetworkTestBtn.setOnClickListener {
 
-                val subscription = BgApplication
-                        .instance
-                        .networkTester
-                        .startTest(10 * 1000)
+                val subscription
+                        = networkTester
+                        .eventPipe()
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
@@ -306,6 +333,8 @@ class MainActivity : AppCompatActivity() {
                 networkDisposables.add(subscription)
 
                 isSubscribedToNetworkTest = true
+
+                networkTester.startTest(10 * 1000)
 
                 renderNetworkTestView()
             }
