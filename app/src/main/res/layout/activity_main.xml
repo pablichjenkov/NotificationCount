@@ -118,6 +118,26 @@
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/timeLeftLabel" />
 
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/textToSpeechLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Text To Speech Enabled: "
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/notificationPostedText" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/textToSpeechText"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:gravity="center_horizontal"
+            android:text="-"
+            app:layout_constraintBaseline_toBaselineOf="@+id/textToSpeechLabel"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/notificationPostedText" />
+
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/startNotificationTestBtn"
             android:layout_width="wrap_content"
@@ -125,7 +145,7 @@
             android:layout_marginTop="16dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/notificationPostedLabel" />
+            app:layout_constraintTop_toBottomOf="@+id/textToSpeechText" />
 
         <View
             android:id="@+id/networkTestBarrier"
@@ -203,7 +223,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Scan"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/scanResultText" />
@@ -225,7 +244,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Start"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/bleResultText" />

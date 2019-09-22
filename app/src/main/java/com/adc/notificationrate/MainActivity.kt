@@ -236,6 +236,12 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+        override fun onTextToSpeechState(status: Boolean) {
+
+            textToSpeechText.text = if (status) "YES" else "NO"
+
+        }
+
         override fun onTestStart() {
 
             renderNotificationTestView()

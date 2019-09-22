@@ -112,6 +112,8 @@ class NotificationTester(private val application: Application) {
 
         }
 
+        dispatchTalkBackStatus()
+
         startTestTimeStamp = System.currentTimeMillis()
 
         this.batchCap = batchCap
@@ -134,6 +136,14 @@ class NotificationTester(private val application: Application) {
         startRepeatTimer()
 
         isTestRunning.set(true)
+
+    }
+
+    private fun dispatchTalkBackStatus() {
+
+        mainLoopHandler.post {
+            notificationTestCallback?.onTextToSpeechState(isTalkBackEnabled())
+        }
 
     }
 
@@ -235,6 +245,28 @@ class NotificationTester(private val application: Application) {
         }
 
         return serviceFoundCount > 0
+    }
+
+    private fun isTalkBackEnabled(): Boolean {
+
+        val accessibilityManager = application.getSystemService(Context.ACCESSIBILITY_SERVICE)
+                as AccessibilityManager
+
+        if (! accessibilityManager.isEnabled) return false
+
+        if (! accessibilityManager.isTouchExplorationEnabled) return true
+
+        val voiceServicesMask =
+                AccessibilityServiceInfo.FEEDBACK_SPOKEN or
+                AccessibilityServiceInfo.FEEDBACK_AUDIBLE or
+                AccessibilityServiceInfo.FEEDBACK_BRAILLE
+
+        val accessibilityServices =
+                accessibilityManager
+                        .getEnabledAccessibilityServiceList(voiceServicesMask)
+
+        return accessibilityServices.isNotEmpty()
+
     }
 
     private fun startRepeatTimer() {
@@ -441,6 +473,8 @@ interface NotificationTestCallback {
     fun onNotificationServiceDisabled()
 
     fun onAccessibilityServiceDisabled()
+
+    fun onTextToSpeechState(status: Boolean)
 
     fun onTestStart()
 
